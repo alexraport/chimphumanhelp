@@ -1,0 +1,109 @@
+---
+title: "Prospectus"
+author: "Eloise Pedersen and Alexandra Raport"
+date: "2022-10-17"
+output:
+  word_document:
+    reference_docx: template.docx
+   
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+We will do a presentation.
+
+<br>
+
+## a. A brief description of your research question(s) and relevant background
+
+Research Question: When given the choice of two individuals from which to seek help (mastery vs outcome), does age influence the decision? Does species type (human or chimpanzee) affect this choice?
+
+
+It has been established that by age three, children seek help selectively from competent agents (Cluver, 2013; Paulus, 2011; Rowles, 2018). Further research has found that children as young two-years-old will seek help in problem-solving contexts in which they are unfamiliar, but not familiar, with the problem presented. Additionally, two-year-old children are selective in who they seek help from and will seek help more frequently from a knowledgeable over an ignorant helper. This research will determine if as children age, they become more selective and efficient in their help-seeking and social learning ability. 
+
+
+Chimpanzees don’t directly ask for help, and will rarely provide help to others (Yamamoto et al., 2012), but they will tolerate others observing them and learning from them. Chimpanzees become quite behaviorally conservative as they age, and whilst infants will seek help and learn from their mother, willingness to learn from others generally decreases with age (Tomasello et al., 1987; Lamon et al., 2017). This study will determine whether the decision to copy based on mastery or payoff differs in different age groups.
+
+
+So, we want to see whether age impacts the model selection in these two species and whether there is a significant difference between the species, adding to an established history of chimpanzee-child comparisons (Vale et al., 2017).
+
+## b. Design and structure of your data
+
+Cross-level interaction model with repeated measures
+
+Individuals will be given the option to seek help with a task from either a master model or a preferred outcome model. There will be several iterations of the experiment which provides repeated measures. This will take place in both chimpanzees and children. Data will be structured with columns for the outcome of each repeated measure, then the individual_ID for that response measure, then their age, and their species
+
+Level 1: Response (repeated measure)
+Level 2: Individuals
+
+Level 1 predictors: individual age
+Level 2 predictors: species-level average of age; species type
+
+Outcome: individual helper selected (binomial)
+
+## c. A preliminary plan for statistical analysis
+
+1. Power analysis
+2. ICC
+3. Work out whether cluster mean centering is required
+4. Work out if we need random slopes
+5. Run the model
+6. Make a nice graph and table / visualize the data
+
+## d. Additional information that would facilitate discussions 
+(e.g.,network graphs of the data structure, flow chart of experimental designs, etc)
+
+-> We're a bit stuck on the fact that we have repeated measures, especially about how to then apply that to our predictors, would there be no level-1 predictor since it would be the same as the individuals?
+
+-> We also want to talk about the fact that our outcome is binomial, how does that change the code for our model?
+
+Here's a mockup of a dataframe:
+
+```{r echo=FALSE}
+#create data frame with 0 rows and 3 columns
+EPAR <- data.frame(matrix(ncol = 4, nrow = 2))
+
+#provide column names
+colnames(EPAR) <- c('outcome', 'ID', 'Age', 'Species')
+
+head(EPAR)
+```
+
+
+
+## e. github
+https://github.com/eloiseandalex/chimphumanhelp
+
+## f. References
+
+Barnett, K., Darcie, G., Holland, C. J., & Kobasigawa, A. (1982). Children's cognitions about effective helping. Developmental Psychology, 18(2), 267.
+
+Biro, D., Inoue-Nakamura, N., Tonooka, R., Yamakoshi, G., Sousa, C., & Matsuzawa, T. (2003). Cultural innovation and transmission of tool use in wild chimpanzees: Evidence from field experiments. Animal Cognition, 6(4), 213–223. https://doi.org/10.1007/s10071-003-0183-x 
+
+Cluver, A., Heyman, G., & Carver, L. J. (2013). Young children selectively seek help when solving problems. Journal of Experimental Child Psychology, 115(3), 570–578. https://doi.org/10.1016/j.jecp.2012.12.011
+
+Kendal, R., Hopper, L. M., Whiten, A., Brosnan, S. F., Lambeth, S. P., Schapiro, S. J., & Hoppitt, W. (2015). Chimpanzees copy dominant and knowledgeable individuals: Implications for cultural diversity. Evolution and Human Behavior, 36(1), 65–72. https://doi.org/10.1016/j.evolhumbehav.2014.09.002 
+
+Lamon, N., Neumann, C., Gruber, T., & Zuberbühler, K. (2017). Kin-based cultural transmission of tool use in wild chimpanzees. Science Advances, 3(4). https://doi.org/10.1126/sciadv.1602750 
+
+Marchand, G., & Skinner, E. A. (2007). Motivational dynamics of children's academic help-seeking and concealment. Journal of Educational Psychology, 99(1), 65.
+
+Nelson-Le Gall, S., (1981). Help-seeking: An understudied problem-solving skill in children. Developmental Review, 1(3), 224–246. https://doi.org/10.1016/0273-2297(81)90019-8 
+
+Newman, R. S. (2000). Social influences on the development of children's adaptive help seeking: The role of parents, teachers, and peers. Developmental Review, 20(3), 350-404.
+
+Paulus, M., & Moore, C. (2011). Whom to ask for help? Children’s developing understanding of other people’s action capabilities. Experimental Brain Research, 211(3-4), 593–600. https://doi.org/10.1007/s00221-011-2676-1 
+
+Rowles, S. P., & Mills, C. M. (2018). Preschoolers sometimes seek help from socially engaged informants over competent ones. Cognitive Development, 48, 19–31. https://doi.org/10.1016/j.cogdev.2018.06.006 
+
+Ryan, A. M., Patrick, H., & Shim, S. O. (2005). Differential profiles of students identified by their teacher as having avoidant, appropriate, or dependent help-seeking tendencies in the classroom. Journal of Educational Psychology, 97(2), 275.
+
+Tomasello, M., Davis-Dasilva, M., Camak, L., & Bard, K. (1987). Observational learning of tool-use by young chimpanzees. Human Evolution, 2(2), 175–183. https://doi.org/10.1007/bf02436405 
+
+Vale, G. L., Flynn, E. G., Kendal, J., Rawlings, B., Hopper, L. M., Schapiro, S. J., Lambeth, S. P., & Kendal, R. L. (2017). Testing differential use of payoff-biased social learning strategies in children and chimpanzees. Proceedings of the Royal Society B: Biological Sciences, 284(1868), 20171751. https://doi.org/10.1098/rspb.2017.1751 
+
+Yamamoto, S., Humle, T., & Tanaka, M. (2012). Chimpanzees’ flexible targeted helping based on an understanding of conspecifics’ goals. Proceedings of the National Academy of Sciences, 109(9), 3588–3592. https://doi.org/10.1073/pnas.1108517109 
+
