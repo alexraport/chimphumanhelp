@@ -1,0 +1,257 @@
+---
+title: "Homework 9: Preliminary Analysis"
+author: "Eloise Pedersen and Alex Raport"
+date: "2022-11-08"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(here)  # makes reading data more consistent
+library(tidyverse)  # for data manipulation and plotting
+library(haven)  # for importing SPSS/SAS/Stata data
+library(lme4)  # for multilevel logistic models
+library(brms)  # for Bayesian multilevel models
+library(sjPlot)  # for plotting
+library(MuMIn)  # for R^2
+library(modelsummary)  # for making tables
+library(readxl)
+library(ggplot2)
+library(psych)
+library(broom.mixed) 
+
+data1 <-read_excel(here("testdathum.xlsx"))
+data2 <- read_excel(here("testdatchimp.xlsx"))
+data3 <- read_excel(here("testdat.xlsx"))
+
+
+```
+
+
+# Description of each variable in your preliminary analysis
+
+Level 1: Response (repeated measure) 
+Level 2: Individuals
+
+Level 1 predictors: none
+Level 2 predictors: Age; species type (human or chimpanzee)
+
+Outcome: Individual helper/model selected (Bernoulli distribution marked as 0 or 1)
+
+See the below graph for a visualization of the Bernoulli distribution:
+
+```{r echo=FALSE}
+set.seed(3000)
+# Randomly select some individuals
+random_individual <- sample(data3$ID, size = 9)
+data3 %>%
+    filter(ID %in% random_individual) %>%
+    mutate(RespHelp = factor(RespHelp,
+      labels = c("Outcome/Payoff", "Mastery/Rank")
+    )) %>%
+    ggplot(aes(x = RespHelp)) +
+    geom_bar() +
+    facet_wrap(~ID, ncol = 3) +
+    coord_flip()
+```
+
+
+# Model equations
+
+$$
+  \begin{aligned}
+    Y_{ti} & = \beta_{0j} + \beta_{1i} \text{Trial}_{ti} + \beta_{2i} \text{Species}_{ti} + e_{ti} \\
+    \beta_{0i} & = \gamma_{00} + {\color{red}{\gamma_{01}}} W_i + u_{0i} \\
+    \beta_{1i} & = \gamma_{10} + \gamma_{11} W_i + u_{1i} \\
+    \beta_{2i} & = \gamma_{20} + \gamma_{21} W_i + u_{2i} \\
+    Y_{ti} & = \gamma_{00} + {\color{red}{\gamma_{01}}} W_i + u_{0i} + 
+    \gamma_{10}\text{Trial}_{ti} + \gamma_{11} W_i * \text{Trial}_{ti} + u_{1i} * \text{Trial}_{ti} + 
+    \gamma_{20}\text{Species}_{ti} + \gamma_{21} W_i * \text{Species}_{ti} + u_{2i} * \text{Trial}_{ti} 
+    + e_{ti}
+  \end{aligned}
+$$
+
+Where $W$ is Age Group
+
+# Your code for running the multilevel analyses
+
+## Unconditional Model
+
+
+```{r unconditional models}
+#Human
+set.seed(1000)
+unconhum <- brm(RespHelp ~ (1 | ID),
+                  data = data1,
+                  family = bernoulli("logit"), file = "huicc")
+
+
+#Chimp
+unconchi <- brm(RespHelp ~ (1 | ID),
+                  data = data2,
+                  family = bernoulli("logit"), file = "chicc")
+
+#Both
+unconbo <- brm(RespHelp ~ (1 | ID),
+                  data = data3,
+                  family = bernoulli("logit"), file = "boicc")
+
+
+```
+
+## ICC
+
+```{r}
+set.seed(1000)
+performance::icc(unconhum)
+performance::icc(unconchi)
+performance::icc(unconbo)
+```
+
+
+**ICC analysis**
+
+One's unique ID accounts for 7.5% if variation in humans, 6.8% of variation in chimpanzees, and 10% of variation when species are combined
+
+## Human model for effect of Age on Helper chosen
+- Including random slope for 'trial' and an interaction term between trial and age
+
+```{r message=FALSE, warning=FALSE}
+#human only model
+
+mhum <- brm(RespHelp ~ AgeGroup + Trial + AgeGroup * Trial + (Trial | ID),
+                 data = data1, family = bernoulli("logit"), file = "newhum2")
+
+summary(mhum)
+
+m1_plotsh <- plot_model(mhum,
+    type = "pred",
+    show.data = TRUE, jitter = 0.02,
+    title = "", dot.size = 0.5
+)
+gridExtra::grid.arrange(grobs = m1_plotsh, ncol = 2)
+
+```
+
+
+## Chimp model for effect of Age on Helper chosen
+- Including random slope for 'trial' and an interaction term between trial and age
+
+```{r message=FALSE, warning=FALSE}
+#chimp only model
+
+mchimp <- brm(RespHelp ~ AgeGroup + Trial + AgeGroup * Trial + (Trial | ID),
+                 data = data2, family = bernoulli("logit"), file = "newc2")
+
+summary(mchimp)
+
+m1_plotsc <- plot_model(mchimp,
+    type = "pred",
+    show.data = TRUE, jitter = 0.02,
+    title = "", dot.size = 0.5
+)
+gridExtra::grid.arrange(grobs = m1_plotsc, ncol = 2)
+
+```
+
+
+## Combined model for effect of Age Group and Species on Helper chosen
+
+```{r message=FALSE, warning=FALSE}
+combomodel <- brm(
+    RespHelp ~ AgeGroup + Species + Trial + AgeGroup * Trial + AgeGroup * Species + (Trial + Species | ID),
+    data = data3,
+    family = bernoulli("logit"),
+    file = "newcom2",
+    seed = 1541)
+
+summary(combomodel)
+
+m1_plotsb <- plot_model(combomodel,
+    type = "pred",
+    show.data = TRUE, jitter = 0.02,
+    title = "", dot.size = 0.5
+)
+
+```
+
+```{r, echo=FALSE,results='hide',fig.keep='all'}
+m1_plotsb
+```
+
+
+# A table summarizing model results
+
+```{r message=FALSE, warning=FALSE}
+
+msummary(
+    list( "Human" = mhum, "Chimp" = mchimp, "Combined" = combomodel),
+    statistic = "[{conf.low}, {conf.high}]",
+    shape = effect + term ~ model,
+    gof_map = c("nobs"),
+    metrics = "none"
+)
+
+```
+
+
+
+# A short paragraph summarizing the findings from your model addressing your research questions.
+
+## Calculations
+
+Because it's a logistic model, the coefficient refers to an increase or decrease in the log odds of the model being chosen, we need to convert this to probability:
+
+**Human**
+
+Log odds of age group 1 in the human only data to select model 0 (high payoff/outcome) is $\gamma_{00} = -1.676$
+$\gamma_{01} = 0.993$ so log odds for age group 2 to select model 0 is -0.683
+
+plogis(-1.676) = 0.16 = probability age group 1 chooses model 0
+plogis(-0.683) = 0.34 = probability age group 2 chooses model 0
+
+Probability ratio = 2.125
+
+**Chimpanzee**
+
+Log odds of age group 1 in the chimp only data to select model 0 (high payoff/outcome) is $\gamma_{00} = -1.283$
+$\gamma_{01} = 0.398$ so log odds for age group 2 to select model 0 is -0.885
+
+plogis(-1.283) = 0.22 = probability age group 1 chooses model 0
+plogis(-0.885) = 0.29 = probability age group 2 chooses model 0
+
+Probability ratio = 1.3182
+
+**Combo**
+
+Log odds of age group 1 in the combined data to select model 0 (high payoff/outcome) is $\gamma_{00} = -0.487$
+$\gamma_{01} = -0.275$ so log odds for age group 2 to select model 0 is -0.76
+
+plogis(-0.487) = 0.38 = probability age group 1 chooses model 0
+plogis(-0.762) = 0.32 = probability age group 2 chooses model 0
+
+Probability ratio = 0.84
+
+**Species effect**
+
+Log odds of humans in the combined data to select model 0 (high payoff/outcome) is $\gamma_{00} = -0.487$
+$\gamma_{01} = 0.268$ so log odds for chimps to select model 0 is -0.2
+
+plogis(-0.487) = 0.38 = probability humans choose model 0
+plogis(-0.219) = 0.45 = probability chimps choose model 0
+
+Probability ratio = 1.18 
+
+## Interpretations
+
+Our research is asking 2 main questions. The first is given the choice of two individuals from which to seek help (mastery vs outcome), does age influence the decision for humans and chimpanzees? Our second, is if species type (human or chimpanzee) affects this choice. In answering the first question we initially looked a chimpanzees and humans separately. Chimpanzees in the younger age group were 1.32 times more likely to select an outcome model compared to their older counterparts. Similarly, human children in the younger age group were 2.5 times more likely to select an outcome model compared older children. When looking at an age comparison of humans and chimpanzees together, those in the younger age groups were .84 times less likely to select the outcome model. In answering our second question, we found that as a species, chimpanzees are 1.18 times more likely to select an outcome model over human children. 
+ 
+
+
